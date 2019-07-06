@@ -17,35 +17,66 @@ namespace Fitness.BL
         /// <summary>
         /// Користувач
         /// </summary>
-        public User User { get; }
-       /// <summary>
+        public List<User> Users { get; }
+        public User CurrentUser { get; }
+
+        public bool IsNewUser { get; } = false;
+        /// <summary>
        /// Ствоорення нового користувача
        /// </summary>
        /// <param name="user"></param>
-        public UserController(string userName, string genderName, DateTime birthDate, double weight, double height )
+        public UserController(string userName)
         {
-            //TODO: провірка
-            var gender = new Gender(genderName);
-            User = new User(userName, gender, birthDate, weight, height);
+            if (string.IsNullOrWhiteSpace(userName))
+            {
+                throw new ArgumentNullException("Ім'я користувача не може бути пустим", nameof(userName));
+            }
+
+            Users = GetUsersData();
+            CurrentUser = Users.SingleOrDefault(u => u.Name == userName);
+
+            if(CurrentUser == null)
+            {
+                CurrentUser = new User(userName);
+                Users.Add(CurrentUser);
+                IsNewUser = true;
+                Save();
+            }
+
+        }
+
+
+        public void SetNewUserData(string genderName, DateTime birthDate, double weight =1, double height = 1 )
+        {
+            //TODO: Перевірка
+            CurrentUser.Gender = new Gender(genderName);
+            CurrentUser.BirthDate = birthDate;
+            CurrentUser.Weight = weight;
+            CurrentUser.Height = height;
+            Save();
+
         }
 
         /// <summary>
-        /// Отримати дані користувача
+        /// Отримати збрежений список користувачів
         /// </summary>
         /// <returns></returns>
-        public UserController()
+        private List<User> GetUsersData()
         {
             var formatter = new BinaryFormatter();
 
             using (var fs = new FileStream("users.dat", FileMode.OpenOrCreate))
             {
-               if(formatter.Deserialize(fs) is User user)
+                if (formatter.Deserialize(fs) is List<User> user)
                 {
-                    User = user;
+                    return user;
                 }
-               //TODO: що робити в тому випадку, якщо користувача не прочитали
+                else
+                {
+                    return new List<User>();
+                }
             }
-
+            return null;
         }
 
 
@@ -57,7 +88,7 @@ namespace Fitness.BL
             var formatter = new BinaryFormatter();
             using (var fs = new FileStream("users.dat", FileMode.OpenOrCreate))
             {
-                formatter.Serialize(fs, User);
+                formatter.Serialize(fs, Users);
           
             }
         }
