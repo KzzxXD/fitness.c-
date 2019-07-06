@@ -9,14 +9,46 @@ using System.Threading.Tasks;
 
 namespace Fitness.BL
 {
+    /// <summary>
+    /// Контроллер користувача
+    /// </summary>
     public class UserController
     {
+        /// <summary>
+        /// Користувач
+        /// </summary>
         public User User { get; }
-
-        public UserController(User user)
+       /// <summary>
+       /// Ствоорення нового користувача
+       /// </summary>
+       /// <param name="user"></param>
+        public UserController(string userName, string genderName, DateTime birthDate, double weight, double height )
         {
-            User = user ?? throw new ArgumentNullException("Користувач не може бути рівним null",nameof(user));
+            //TODO: провірка
+            var gender = new Gender(genderName);
+            User = new User(userName, gender, birthDate, weight, height);
         }
+
+        /// <summary>
+        /// Отримати дані користувача
+        /// </summary>
+        /// <returns></returns>
+        public UserController()
+        {
+            var formatter = new BinaryFormatter();
+
+            using (var fs = new FileStream("users.dat", FileMode.OpenOrCreate))
+            {
+               if(formatter.Deserialize(fs) is User user)
+                {
+                    User = user;
+                }
+               //TODO: що робити в тому випадку, якщо користувача не прочитали
+            }
+
+        }
+
+
         /// <summary>
         /// Зберегти дані користувача
         /// </summary>
@@ -29,30 +61,6 @@ namespace Fitness.BL
           
             }
         }
-        /// <summary>
-        /// Отримати дані користувача
-        /// </summary>
-        /// <returns></returns>
-        public User Load()
-        {
-            var formatter = new BinaryFormatter();
-
-            using (var fs = new FileStream("users.dat", FileMode.OpenOrCreate))
-            {
-
-                if (formatter.Deserialize(fs) is User user)
-                {
-                    return user;
-                }
-                else
-                {
-                    throw new FileLoadException("Не вдалось отримати дані з файлу", "users");
-                }
-
-
-            }
-
-        }
-
+        
     }
 }
